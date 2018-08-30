@@ -88,7 +88,7 @@ class Controller(object):
 	    brake = 400 #N*m automatic transmission car  
 	
 	# indicating vehicle needs to slow down more.
-	elif throttle < .1 and vel_error < 0:
+	elif throttle < .01 and vel_error < 0:
 	    throttle = 0.
 	    decel = max(vel_error, self.decel_limit)
 	    # break force needed is decel factor and weight*wheel radius to apply torque force in newton meters.	

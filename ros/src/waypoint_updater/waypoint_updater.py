@@ -22,7 +22,7 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 50 # Number of waypoints we will publish. You can change this number
 Max_Deceleration = 0.5
 
 class WaypointUpdater(object):
@@ -57,7 +57,7 @@ class WaypointUpdater(object):
 	# loop gives control of publishing frequency
     def loop(self):
 	# publishing frequency of 35 hertz
-	rate =rospy.Rate(35) # waypoint follower is running at 30hz 
+	rate =rospy.Rate(50) # waypoint follower is running at 30hz 
 	while not rospy.is_shutdown():
             if self.pose and self.base_waypoints:
 	        #get closest waypoints
@@ -66,6 +66,11 @@ class WaypointUpdater(object):
       	    rate.sleep()
 
     def get_closest_waypoint_id(self):
+	# Simulator/code crash when     closest_idx = self.waypoint_tree.query([x,y],1)[1]
+	#AttributeError: 'NoneType' object has no attribute 'query'
+	if self.waypoints_2d is None:
+	    return 0
+
 	# collecting x and y positions from pose	
 	x = self.pose.pose.position.x
 	y = self.pose.pose.position.y
@@ -136,7 +141,7 @@ class WaypointUpdater(object):
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
-        stopline_wp_idx = msg.data
+        self.stopline_wp_idx = msg.data
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
