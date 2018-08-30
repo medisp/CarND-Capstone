@@ -10,6 +10,8 @@ from light_classification.tl_classifier import TLClassifier
 import tf
 import cv2
 import yaml
+import math
+import time
 
 STATE_COUNT_THRESHOLD = 3
 
@@ -21,10 +23,9 @@ class TLDetector(object):
         self.waypoints = None
         self.camera_image = None
         self.lights = []
-
-        pose_sub = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
-        waypoints_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-
+	self.light_classifier = None # debug dbw_node.py
+	self.debug_mode = False
+   
         '''
         /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
         helps you acquire an accurate ground truth data source for the traffic light
@@ -32,7 +33,9 @@ class TLDetector(object):
         simulator. When testing on the vehicle, the color state will not be available. You'll need to
         rely on the position of the light and the camera image to predict it.
         '''
-        lights_sub = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
+    	pose_sub = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
+        waypoints_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb) # sub2
+	lights_sub = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
         color_sub = rospy.Subscriber('/image_color', Image, self.image_cb)
 
         config_string = rospy.get_param("/traffic_light_config")
@@ -41,14 +44,30 @@ class TLDetector(object):
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
+        # using debug flag to turn on and off self.light_classifier = TLClassifier()
         self.listener = tf.TransformListener()
-
+	if not self.debug_mode:
+	    self.light_classifier = TLClassifier()
+	    rospy.logwarn("Classifier being initialized")
+	else:
+	    self.light_classifier = None
+	    rospy.logwarn("Debug mode dbw_node. no classification")
+	    
         self.state = TrafficLight.UNKNOWN
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
-
+	
+	# collecting training images, settings for TL_Classifier
+	self.collect_images = False
+	self.ros_bag_mode = False
+	self.image_max_dist = 60
+	self.image_min_dist = 5
+	self.image_interval = 2
+	self.image_last_light = None
+	self.image_last_dist = 0
+	
+	
         rospy.spin()
 
     def pose_cb(self, msg):
