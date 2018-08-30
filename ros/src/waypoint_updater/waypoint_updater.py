@@ -49,7 +49,7 @@ class WaypointUpdater(object):
 	self.base_waypoints = None
 	self.waypoints_2d = None
 	self.waypoint_tree = None
-
+        self.stopline_wp_idx = -1
 	#
 	self.loop()
         #rospy.spin()
@@ -119,7 +119,7 @@ class WaypointUpdater(object):
 	    p = Waypoint() # new waypoint item for deceleration
 	    p.pose = wp.pose  # orientation of waypoints staying the same
 
-	    stop_idx = max(self.stopline_wp_idx - closest_idx -2,0) # 2 waypoints back from line
+	    stop_idx = max(self.stopline_wp_idx - closest_idx - 3,0) # 3 waypoints back from line
 	    dist = self.distance(waypoints, i, stop_idx)	
 	    vel = math.sqrt(2 * Max_Deceleration * dist)
 	    if vel < 1.:
