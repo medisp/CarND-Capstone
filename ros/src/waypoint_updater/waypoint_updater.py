@@ -35,10 +35,10 @@ class WaypointUpdater(object):
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
 
 	# subscriber for traffic waypoints 
-	rospy.Subscriber("/traffic_waypoints", Int32, self.traffic_cb)
+	rospy.Subscriber("/traffic_waypoints", Lane, self.traffic_cb)
 
 	# subscriber for obstacle waypoints
-	rospy.Subscriber("/obstacle_waypoints", Int32, self.obstacle_cb)
+	rospy.Subscriber("/obstacle_waypoints", Lane, self.obstacle_cb)
 
 	
 	
@@ -56,8 +56,8 @@ class WaypointUpdater(object):
 	
 	# loop gives control of publishing frequency
     def loop(self):
-	# publishing frequency of 50 hertz
-	rate =rospy.Rate(50)
+	# publishing frequency of 35 hertz
+	rate =rospy.Rate(35) # waypoint follower is running at 30hz 
 	while not rospy.is_shutdown():
             if self.pose and self.base_waypoints:
 	        #get closest waypoints
@@ -96,7 +96,7 @@ class WaypointUpdater(object):
 	
     def generate_lane(self):
 	lane = Lane()
-	closest_idx = self.get_closest_waypoint_idx()
+	closest_idx = self.get_closest_waypoint_id()
 	farthest_idx = closest_idx + LOOKAHEAD_WPS
 	base_waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
 	
@@ -109,17 +109,23 @@ class WaypointUpdater(object):
 
 
     def decelerate_waypoints(self, waypoints, closest_idx):
-	temp = []
+	new_wps = [] # new waypoint list for deceleration
 	for i, wp in enumerate(waypoints):
-	    p = Waypoint()
-	    p.pose = wp.pose
+	    p = Waypoint() # new waypoint item for deceleration
+	    p.pose = wp.pose  # orientation of waypoints staying the same
 
 	    stop_idx = max(self.stopline_wp_idx - closest_idx -2,0) # 2 waypoints back from line
 	    dist = self.distance(waypoints, i, stop_idx)	
 	    vel = math.sqrt(2 * Max_Deceleration * dist)
+	    if vel < 1.:
+	        vel = 0.
+	    p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
+	    new_wps.append(p)
+	return new_wps	
+
     def pose_cb(self, msg):
         # TODO: Implement
-	self.pose = msg        
+	self.pose = msg #        
 	
     def waypoints_cb(self, waypoints):
         # TODO: Implement
@@ -134,7 +140,8 @@ class WaypointUpdater(object):
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
-        obstacle_wp_idx = msg.data
+        #obstacle_wp_idx = msg.data
+	pass
 
     def get_waypoint_velocity(self, waypoint):
         return waypoint.twist.twist.linear.x
