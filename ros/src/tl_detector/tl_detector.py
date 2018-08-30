@@ -33,10 +33,10 @@ class TLDetector(object):
         simulator. When testing on the vehicle, the color state will not be available. You'll need to
         rely on the position of the light and the camera image to predict it.
         '''
-    	pose_sub = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
+    	pose_sub = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb) #sub1
         waypoints_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb) # sub2
-	lights_sub = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        color_sub = rospy.Subscriber('/image_color', Image, self.image_cb)
+	lights_sub = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb) #sub3 
+        color_sub = rospy.Subscriber('/image_color', Image, self.image_cb, queue_size=1) #sub6
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
@@ -75,7 +75,10 @@ class TLDetector(object):
 
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
-
+        if not self.waypoints_2d:
+            self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+            self.waypoints_tree = KDTree(self.waypoints_2d)
+		
     def traffic_cb(self, msg):
         self.lights = msg.lights
 
@@ -88,8 +91,13 @@ class TLDetector(object):
         """
         self.has_image = True
         self.camera_image = msg
+	self.class_interval = rospy.get_time() - self.class_time  
+	if self.class_interval < 0.1:
+            return #classifying interval too short
+	
         light_wp, state = self.process_traffic_lights()
-
+	self.class_time = rospy.get_time()
+	
         '''
         Publish upcoming red lights at camera frequency.
         Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
@@ -119,9 +127,12 @@ class TLDetector(object):
             int: index of the closest waypoint in self.waypoints
 
         """
-        #TODO implement
-	closest_idx = self.waypoint_tree.query([x,y],1)[1]
-        return closest_idx
+        #TODO implement  ---- Direction and advisement from walkthrough video 
+	if self.waypoints_tree:
+	    closest_idx = self.waypoint_tree.query([x,y],1)[1]
+            return closest_idx
+	else:
+	    return 0
 
     def get_light_state(self, light):
         """Determines the current color of the traffic light
@@ -181,10 +192,10 @@ class TLDetector(object):
 	#if light:
         #    state = self.get_light_state(light)
         #    return light_wp, state
-        
+        else:
 	#self.waypoints = None
 	# if there isn't a close by traffic light, -1 to ensure normal driving
-        return -1, TrafficLight.UNKNOWN
+            return -1, TrafficLight.UNKNOWN
 
 if __name__ == '__main__':
     try:
