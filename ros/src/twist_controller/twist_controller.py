@@ -49,7 +49,7 @@ class Controller(object):
 	ts = 0.02 # 0.02 sampling time
 	self.vel_lpf = LowPassFilter(tau,ts)
 	
-	#self.last_time = rospy.get_time() #timestep to pass
+	self.last_time = rospy.get_time() #timestep to pass
 
 
 
@@ -72,14 +72,14 @@ class Controller(object):
 
         
 	#timing calcs for sample_time
-	#current_time = rospy.get_time()
-	#sample_time = current_time - self.last_time
-	#self.last_time = current_time
+	current_time = rospy.get_time()
+	sample_time = current_time - self.last_time
+	self.last_time = current_time
 	
 	#setting throttle step from PID
 	
 	#arglist def step(self, error, sample_time):
-	throttle = self.throttle_controller.step(vel_error, time_step)
+	throttle = self.throttle_controller.step(vel_error, sample_time) #time_step)
 	brake = 0.
 
 	# to completely stop and stay stopped at the red stoplight
