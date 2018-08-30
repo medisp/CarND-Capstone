@@ -35,7 +35,7 @@ class Controller(object):
 	self.min_vel = 0.
 	self.max_vel = 15.
 	#init yaw controller
-	self.yaw_controller = YawController(wheel_base, steer_ratio, self.min_vel, max_lat_accel,max_steer_angle)
+	self.yaw_controller = YawController(wheel_base, steer_ratio, 0.1, max_lat_accel,max_steer_angle)
 	
 	kp = 0.3 #2.16 #3.5   #.16
 	ki = 0.1 #0.1 #5
