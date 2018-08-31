@@ -2,6 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Bool
 from styx_msgs.msg import Lane, Waypoint
 from scipy.spatial import KDTree
 import numpy as np
@@ -39,17 +40,18 @@ class WaypointUpdater(object):
 
 	# subscriber for obstacle waypoints
 	rospy.Subscriber("/obstacle_waypoints", Lane, self.obstacle_cb)
-
+	#rospy.Subscriber('/vehicle/dbw_enabled',Bool, self.dbw_enabled_cb)
 	
 	
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
-
+	
         # TODO: Add other member variables you need below
 	self.pose = None
 	self.base_waypoints = None
 	self.waypoints_2d = None
 	self.waypoint_tree = None
         self.stopline_wp_idx = -1
+	self.dbw_enabled = False
 	#
 	self.loop()
         #rospy.spin()
@@ -57,7 +59,7 @@ class WaypointUpdater(object):
 	# loop gives control of publishing frequency
     def loop(self):
 	# publishing frequency of 35 hertz
-	rate =rospy.Rate(50) # waypoint follower is running at 30hz 
+	rate =rospy.Rate(35) # waypoint follower is running at 30hz 
 	while not rospy.is_shutdown():
             if self.pose and self.base_waypoints:
 	        #get closest waypoints
@@ -65,32 +67,7 @@ class WaypointUpdater(object):
                 self.publish_waypoints(closest_waypoint_idx)
       	    rate.sleep()
 
-    def get_closest_waypoint_id(self):
-	# Simulator/code crash when     closest_idx = self.waypoint_tree.query([x,y],1)[1]
-	#AttributeError: 'NoneType' object has no attribute 'query'
-	if self.waypoints_2d is None:
-	    return 0
-
-	# collecting x and y positions from pose	
-	x = self.pose.pose.position.x
-	y = self.pose.pose.position.y
-	closest_idx = self.waypoint_tree.query([x,y],1)[1]
-
-	# Checking waypoints for closest to vehicle
-	closest_coord = self.waypoints_2d[closest_idx]
-	prev_coord = self.waypoints_2d[closest_idx-1]
-
-	# init vectors of plane to do distance computation	
-	closest_vector = np.array(closest_coord)
-	previous_vector = np.array(prev_coord)
-	position_vector = np.array([x,y])
-	
-	#compute steps
-	val = np.dot(closest_vector - previous_vector, position_vector - closest_vector)	
-
-	if val > 0:
-	    closest_idx = (closest_idx+1) % len(self.waypoints_2d)
-	return closest_idx
+    
 
 	
     def publish_waypoints(self, closest_idx):
@@ -161,7 +138,34 @@ class WaypointUpdater(object):
             dist += dl(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
             wp1 = i
         return dist
+    def get_closest_waypoint_id(self):
+	# Simulator/code crash when     closest_idx = self.waypoint_tree.query([x,y],1)[1]
+	#AttributeError: 'NoneType' object has no attribute 'query'
+	x = self.pose.pose.position.x
+	y = self.pose.pose.position.y
+	if self.waypoints_2d is None:
+	    return 0
 
+	# collecting x and y positions from pose	
+	
+	else: #if not None in self.waypoint_tree:
+	    closest_idx = self.waypoint_tree.query([x,y],1)[1]
+
+	# Checking waypoints for closest to vehicle
+	    closest_coord = self.waypoints_2d[closest_idx]
+ 	    prev_coord = self.waypoints_2d[closest_idx-1]
+
+	# init vectors of plane to do distance computation	
+	    closest_vector = np.array(closest_coord)
+	    previous_vector = np.array(prev_coord)
+	    position_vector = np.array([x,y])
+	
+	#compute steps
+	    val = np.dot(closest_vector - previous_vector, position_vector - closest_vector)	
+
+	    if val > 0:
+	        closest_idx = (closest_idx+1) % len(self.waypoints_2d)
+	return closest_idx
 
 if __name__ == '__main__':
     try:

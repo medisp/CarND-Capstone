@@ -67,7 +67,7 @@ class Controller(object):
 	steering_angle = self.yaw_controller.get_steering(linear_vel, angular_vel, current_vel)
 
 	vel_error = linear_vel - current_vel
-	#self.last_vel = current_vel
+	self.last_vel = current_vel
 
 
         
