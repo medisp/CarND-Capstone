@@ -72,7 +72,7 @@ class WaypointUpdater(object):
 	
     def publish_waypoints(self, closest_idx):
 	lane = Lane()
-	lane.header = self.base_waypoints.header
+	lane.header = self.base_waypoints.header   #self.base_lane??
 	lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx + LOOKAHEAD_WPS]
 	self.final_waypoints_pub.publish(lane)	
 	
@@ -80,7 +80,7 @@ class WaypointUpdater(object):
 	lane = Lane()
 	closest_idx = self.get_closest_waypoint_id()
 	farthest_idx = closest_idx + LOOKAHEAD_WPS
-	base_waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
+	base_waypoints = self.base_waypoints.waypoints[closest_idx:farthest_idx]
 	
 	if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >=farthest_idx):
 	    lane.waypoints = base_waypoints
@@ -150,7 +150,7 @@ class WaypointUpdater(object):
 	
 	else: #if not None in self.waypoint_tree:
 	    closest_idx = self.waypoint_tree.query([x,y],1)[1]
-
+	    #rospy.logwarn("closest_idx is {0} ".format(closest_idx))
 	# Checking waypoints for closest to vehicle
 	    closest_coord = self.waypoints_2d[closest_idx]
  	    prev_coord = self.waypoints_2d[closest_idx-1]

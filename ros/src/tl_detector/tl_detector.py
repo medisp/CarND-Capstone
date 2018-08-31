@@ -141,7 +141,8 @@ class TLDetector(object):
 	#y = self.pose.pose.position.y
 	if self.waypoint_tree:
 	    closest_idx = self.waypoint_tree.query([x,y],1)[1]
-            return closest_idx
+            rospy.logwarn("closest_idx is {0}",format(closest_idx))
+  	    return closest_idx
 	else:
 	    return 0
 
@@ -176,11 +177,12 @@ class TLDetector(object):
 	closest_light = None        
 	line_wp_idx = None
 
-        # List of positions that correspond to the line to stop in front of for a given intersectionself.get_closest_waypoint
+        # List of positions that correspond to the line to stop in front of for a given intersection self.get_closest_waypoint
         stop_line_positions = self.config['stop_line_positions']
         if(self.pose):
             car_position = self.get_closest_waypoint(self.pose.pose.position.x,self.pose.pose.position.y)
-
+	    #rospy.logwarn("pose_x: {0}".format(self.pose.pose.position.x))
+	    #rospy.logwarn("pose_y: {0}".format(self.pose.pose.position.y))
         #TODO find the closest visible traffic light (if one exists)
 		# length of waypoints
 	    wp_len = len(self.waypoints.waypoints)
@@ -192,8 +194,8 @@ class TLDetector(object):
 		#rospy.logwarn("line 2 is {0}".format(line[1]))
 	        comparison_idx = self.get_closest_waypoint(line[0], line[1])
 			# number of indices between car and closest to stop line	        
-		rospy.logwarn("comparison_idx is".format(comparison_idx))
-		rospy.logwarn("line_wp_idx is".format(line_wp_idx))		
+		#rospy.logwarn("comparison_idx is".format(comparison_idx))
+		#rospy.logwarn("line_wp_idx is".format(line_wp_idx))		
 		dist = comparison_idx - line_wp_idx 			
 	    		# smallest difference between position and stop line position
 	        if dist>=0 and dist < wp_len:
