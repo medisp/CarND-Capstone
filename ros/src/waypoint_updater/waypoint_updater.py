@@ -99,6 +99,7 @@ class WaypointUpdater(object):
 	    p.pose = wp.pose  # orientation of waypoints staying the same
 
 	    stop_idx = max(self.stopline_wp_idx - closest_idx - 3,0) # 3 waypoints back from line
+	    rospy.logwarn("stop_index is: {0}".format(stop_idx))
 	    dist = self.distance(waypoints, i, stop_idx)	
 	    vel = math.sqrt(2 * Max_Deceleration * dist)
 	    if vel < 1.:

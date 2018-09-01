@@ -44,10 +44,10 @@ class TLDetector(object):
 
         config_string = rospy.get_param("/traffic_light_config")
 	
-	rospy.Subscriber('/vehicle/dbw_enabled',Bool, self.dbw_enabled_cb)
+	#rospy.Subscriber('/vehicle/dbw_enabled',Bool, self.dbw_enabled_cb)
         self.config = yaml.load(config_string)
 
-        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
+        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoints', Int32, queue_size=1)
 
         self.bridge = CvBridge()
         # using debug flag to turn on and off self.light_classifier = TLClassifier()
@@ -100,7 +100,7 @@ class TLDetector(object):
         self.has_image = True
         self.camera_image = msg
 	self.class_interval = rospy.get_time() - self.class_time  
-	if self.class_interval < 0.5 and self.debug_mode:
+	if self.class_interval < 1.5 and self.debug_mode:
             return #classifying interval too short
 	
         light_wp, state = self.process_traffic_lights()
@@ -220,7 +220,7 @@ class TLDetector(object):
         # TODO: Implement
 	    self.pose = msg # 
     def dbw_enabled_cb(self,msg):
-	    self.dbw_enabled = msg
+	    pass #self.dbw_enabled = msg
 
 if __name__ == '__main__':
     try:
