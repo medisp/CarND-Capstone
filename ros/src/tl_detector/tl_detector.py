@@ -100,7 +100,7 @@ class TLDetector(object):
         self.has_image = True
         self.camera_image = msg
 	self.class_interval = rospy.get_time() - self.class_time  
-	if self.class_interval < 0.1 and self.debug_mode:
+	if self.class_interval < 0.5 and self.debug_mode:
             return #classifying interval too short
 	
         light_wp, state = self.process_traffic_lights()
@@ -141,7 +141,7 @@ class TLDetector(object):
 	#y = self.pose.pose.position.y
 	if self.waypoint_tree:
 	    closest_idx = self.waypoint_tree.query([x,y],1)[1]
-            rospy.logwarn("closest_idx is {0}",format(closest_idx))
+            #rospy.logwarn("closest_idx is {0}".format(closest_idx))
   	    return closest_idx
 	else:
 	    return 0
@@ -181,6 +181,8 @@ class TLDetector(object):
         stop_line_positions = self.config['stop_line_positions']
         if(self.pose):
             car_position = self.get_closest_waypoint(self.pose.pose.position.x,self.pose.pose.position.y)
+	    #rospy.logwarn("car_position is: {0}".format(car_position))	
+
 	    #rospy.logwarn("pose_x: {0}".format(self.pose.pose.position.x))
 	    #rospy.logwarn("pose_y: {0}".format(self.pose.pose.position.y))
         #TODO find the closest visible traffic light (if one exists)
@@ -195,17 +197,17 @@ class TLDetector(object):
 	        comparison_idx = self.get_closest_waypoint(line[0], line[1])
 			# number of indices between car and closest to stop line	        
 		#rospy.logwarn("comparison_idx is".format(comparison_idx))
-		#rospy.logwarn("line_wp_idx is".format(line_wp_idx))		
-		dist = comparison_idx - line_wp_idx 			
+		#rospy.logwarn("car_position is".format(car_position))		
+		dist = comparison_idx - car_position 			
 	    		# smallest difference between position and stop line position
 	        if dist>=0 and dist < wp_len:
 	            wp_len = dist
 		    closest_light = light
-	            line_wp_idx = comparison_idx
+	            car_position = comparison_idx
 
         if closest_light:
 	    state = self.get_light_state(closest_light)
-	    return line_wp_idx, state	
+	    return car_position, state	
 	#if light:
         #    state = self.get_light_state(light)
         #    return light_wp, state

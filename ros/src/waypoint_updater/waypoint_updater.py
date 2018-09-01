@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Bool
 from styx_msgs.msg import Lane, Waypoint
@@ -23,7 +24,7 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 80 # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 35 # Number of waypoints we will publish. You can change this number
 Max_Deceleration = 0.5
 
 class WaypointUpdater(object):
@@ -36,7 +37,7 @@ class WaypointUpdater(object):
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
 
 	# subscriber for traffic waypoints 
-	rospy.Subscriber("/traffic_waypoints", Lane, self.traffic_cb)
+	rospy.Subscriber("/traffic_waypoints", Int32, self.traffic_cb)
 
 	# subscriber for obstacle waypoints
 	rospy.Subscriber("/obstacle_waypoints", Lane, self.obstacle_cb)
@@ -71,7 +72,8 @@ class WaypointUpdater(object):
 
 	
     def publish_waypoints(self, closest_idx):
-	lane = Lane()
+	#lane = Lane()
+	lane = self.generate_lane()
 	lane.header = self.base_waypoints.header   #self.base_lane??
 	lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx + LOOKAHEAD_WPS]
 	self.final_waypoints_pub.publish(lane)	
