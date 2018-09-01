@@ -114,16 +114,13 @@ class WaypointUpdater(object):
         # Checking waypoints for closest to vehicle
         closest_coord = np.array(self.waypoints_2d[closest_idx])
         prev_coord = np.array(self.waypoints_2d[closest_idx - 1])
-        # init vectors of plane to do distance computation
-        # closest_vector = np.array(closest_coord)
-        # previous_vector = np.array(prev_coord)
         car_coord = np.array([x, y])
         # compute steps
         val = np.dot(closest_coord - prev_coord, car_coord - closest_coord)
         if val > 0:
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
-        rospy.logwarn("get_closest_waypoint closest_idx is {0} ".format(closest_idx))
-        rospy.logwarn("len_self.waypoints_2d is {0}".format(len(self.waypoints_2d)))
+        # rospy.logwarn("get_closest_waypoint closest_idx is {0} ".format(closest_idx))
+        # rospy.logwarn("len_self.waypoints_2d is {0}".format(len(self.waypoints_2d)))
         return closest_idx
 
     def pose_cb(self, msg):
