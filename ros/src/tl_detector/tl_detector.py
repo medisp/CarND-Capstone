@@ -79,7 +79,7 @@ class TLDetector(object):
         self.loop()
     def loop(self):
         # publishing frequency of 35 hertz
-	rate =rospy.Rate(1) # waypoint follower is running at 30hz 
+	rate =rospy.Rate(.5) # waypoint follower is running at 30hz 
 	while not rospy.is_shutdown():
             #if self.pose and self.base_waypoints:
 	    light_wp, state = self.process_traffic_lights()
