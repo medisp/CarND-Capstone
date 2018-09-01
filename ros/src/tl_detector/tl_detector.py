@@ -79,23 +79,22 @@ class TLDetector(object):
         self.loop()
     def loop(self):
         # publishing frequency of 35 hertz
-	rate =rospy.Rate(.5) # waypoint follower is running at 30hz 
-	while not rospy.is_shutdown():
+		rate =rospy.Rate(3) # waypoint follower is running at 30hz 
+		while not rospy.is_shutdown():
             #if self.pose and self.base_waypoints:
-	    light_wp, state = self.process_traffic_lights()
-  	    if self.state != state:
-                self.state_count = 0
-                self.state = state
-            elif self.state_count >= STATE_COUNT_THRESHOLD:
-                self.last_state = self.state
-                light_wp = light_wp if state == TrafficLight.RED else -1
-                self.last_wp = light_wp
-                self.upcoming_red_light_pub.publish(Int32(light_wp))
-            else:
-                self.upcoming_red_light_pub.publish(Int32(self.last_wp))
-                self.state_count += 1
-      	    
-    	    rate.sleep()
+			light_wp, state = self.process_traffic_lights()
+			if self.state != state:
+				self.state_count = 0
+				self.state = state
+			elif self.state_count >= STATE_COUNT_THRESHOLD:
+				self.last_state = self.state
+				light_wp = light_wp if state == TrafficLight.RED else -1
+				self.last_wp = light_wp
+				self.upcoming_red_light_pub.publish(Int32(light_wp))
+			else:
+				self.upcoming_red_light_pub.publish(Int32(self.last_wp))
+				self.state_count += 1    
+			rate.sleep()
 
     def pose_cb(self, msg):
         self.pose = msg
