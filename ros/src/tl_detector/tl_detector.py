@@ -75,7 +75,27 @@ class TLDetector(object):
 	self.dbw_enabled = False
 	self.class_time = rospy.get_time()
 	self.waypoints_2d = None
-        rospy.spin()
+        #rospy.spin()
+        self.loop()
+    def loop(self):
+        # publishing frequency of 35 hertz
+	rate =rospy.Rate(1) # waypoint follower is running at 30hz 
+	while not rospy.is_shutdown():
+            #if self.pose and self.base_waypoints:
+	    light_wp, state = self.process_traffic_lights()
+  	    if self.state != state:
+                self.state_count = 0
+                self.state = state
+            elif self.state_count >= STATE_COUNT_THRESHOLD:
+                self.last_state = self.state
+                light_wp = light_wp if state == TrafficLight.RED else -1
+                self.last_wp = light_wp
+                self.upcoming_red_light_pub.publish(Int32(light_wp))
+            else:
+                self.upcoming_red_light_pub.publish(Int32(self.last_wp))
+                self.state_count += 1
+      	    
+    	    rate.sleep()
 
     def pose_cb(self, msg):
         self.pose = msg
@@ -99,12 +119,12 @@ class TLDetector(object):
         """
         self.has_image = True
         self.camera_image = msg
-	self.class_interval = rospy.get_time() - self.class_time  
-	if self.class_interval < 1.5 and self.debug_mode:
-            return #classifying interval too short
+	#self.class_interval = rospy.get_time() - self.class_time  
+	#if self.class_interval < 1.5 and self.debug_mode:
+        #    return #classifying interval too short
 	
-        light_wp, state = self.process_traffic_lights()
-	self.class_time = rospy.get_time()
+        #light_wp, state = self.process_traffic_lights()
+	#self.class_time = rospy.get_time()
 	
         '''
         Publish upcoming red lights at camera frequency.
@@ -112,7 +132,8 @@ class TLDetector(object):
         of times till we start using it. Otherwise the previous stable state is
         used.
         '''
-		# previous state to detect state change
+	'''	
+	# previous state to detect state change
         if self.state != state:
             self.state_count = 0
             self.state = state
@@ -124,7 +145,7 @@ class TLDetector(object):
         else:
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
         self.state_count += 1
-
+	'''
     def get_closest_waypoint(self, x, y):
         """Identifies the closest path waypoint to the given position
             https://en.wikipedia.org/wiki/Closest_pair_of_points_problem
